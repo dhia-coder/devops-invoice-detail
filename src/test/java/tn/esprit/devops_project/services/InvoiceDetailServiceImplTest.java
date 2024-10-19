@@ -132,4 +132,62 @@ public class InvoiceDetailServiceImplTest {
             invoiceDetailService.retrieveInvoiceDetail(1L);
         });
     }
+
+
+
+    //Si le service lance des exceptions personnalisées (par exemple, lorsque la quantité dépasse le stock disponible ou en cas de facture archivée),
+    @Test
+    public void testUpdateInvoiceDetail_ThrowsExceptionWhenQuantityExceedsStock() {
+        // Given
+        Product productWithLowStock = new Product(1L, "Product A", 50.0f, 5, null, null); // Only 5 in stock
+        InvoiceDetail invoiceDetail = new InvoiceDetail(1L, 10, 100.0f, productWithLowStock, invoice); // Trying to update with quantity 10
+
+        when(invoiceDetailRepository.findById(1L)).thenReturn(Optional.of(invoiceDetail));
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            invoiceDetailService.updateInvoiceDetail(1L, invoiceDetail);
+        });
+    }
+
+
+    //Tester le calcul du montant total d'une facture détaillée (InvoiceDetail)
+    @Test
+    public void testCalculateTotalAmount() {
+        // Given
+        InvoiceDetail invoiceDetail = new InvoiceDetail(1L, 5, 50.0f, product, invoice); // 5 * 50 = 250
+
+        // When
+        float totalAmount = invoiceDetailService.calculateTotalAmount(invoiceDetail);
+
+        // Then
+        assertEquals(250.0f, totalAmount);
+    }
+
+
+
+
+    //Dans le cas où une mise à jour d'un détail de facture (par exemple, le prix ou la quantité) nécessite une   vérification  des stocks ou les limites de prix),
+    @Test
+    public void testUpdateInvoiceDetailWithLogic() {
+        // Given
+        Product productWithStock = new Product(1L, "Product B", 50.0f, 10, null, null); // Product with enough stock
+        InvoiceDetail existingInvoiceDetail = new InvoiceDetail(1L, 2, 100.0f, productWithStock, invoice);
+        InvoiceDetail updatedInvoiceDetail = new InvoiceDetail(1L, 3, 150.0f, productWithStock, invoice);
+
+        when(invoiceDetailRepository.findById(1L)).thenReturn(Optional.of(existingInvoiceDetail));
+        when(invoiceDetailRepository.save(any(InvoiceDetail.class))).thenReturn(updatedInvoiceDetail);
+
+        // When
+        InvoiceDetail result = invoiceDetailService.updateInvoiceDetail(1L, updatedInvoiceDetail);
+
+        // Then
+        assertEquals(1L, result.getIdInvoiceDetail());
+        assertEquals(3, result.getQuantity());
+        assertEquals(150.0f, result.getPrice());
+    }
+
+
+
+
 }

@@ -15,6 +15,8 @@ public interface IInvoiceDetailService {
     void deleteInvoiceDetail(Long idInvoiceDetail);
 
     InvoiceDetail retrieveInvoiceDetail(Long idInvoiceDetail);
+    float calculateTotalAmount(InvoiceDetail invoiceDetail);
+
 
     // Add any other method specific to InvoiceDetail, if needed
 }

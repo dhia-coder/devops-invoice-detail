@@ -28,18 +28,22 @@ public class InvoiceDetailServiceImpl implements IInvoiceDetailService {
     }
 
     @Override
-    public InvoiceDetail updateInvoiceDetail(Long idInvoiceDetail, InvoiceDetail invoiceDetail) {
-        InvoiceDetail existingInvoiceDetail = invoiceDetailRepository.findById(idInvoiceDetail)
-                .orElseThrow(() -> new NullPointerException("InvoiceDetail not found"));
+    public InvoiceDetail updateInvoiceDetail(Long id, InvoiceDetail invoiceDetail) {
+        InvoiceDetail existingDetail = invoiceDetailRepository.findById(id).orElseThrow(() -> new NullPointerException("InvoiceDetail not found"));
 
-        // Update existing details with the new ones
-        existingInvoiceDetail.setQuantity(invoiceDetail.getQuantity());
-        existingInvoiceDetail.setPrice(invoiceDetail.getPrice());
-        existingInvoiceDetail.setProduct(invoiceDetail.getProduct());
-        existingInvoiceDetail.setInvoice(invoiceDetail.getInvoice());
+        // Check if the quantity exceeds the available stock
+        if (invoiceDetail.getQuantity() > invoiceDetail.getProduct().getQuantity()) {
+            throw new IllegalArgumentException("Quantity exceeds available stock");
+        }
 
-        return invoiceDetailRepository.save(existingInvoiceDetail);
+        existingDetail.setQuantity(invoiceDetail.getQuantity());
+        existingDetail.setPrice(invoiceDetail.getPrice());
+        existingDetail.setProduct(invoiceDetail.getProduct());
+        existingDetail.setInvoice(invoiceDetail.getInvoice());
+
+        return invoiceDetailRepository.save(existingDetail);
     }
+
 
     @Override
     public void deleteInvoiceDetail(Long idInvoiceDetail) {
@@ -54,4 +58,10 @@ public class InvoiceDetailServiceImpl implements IInvoiceDetailService {
         return invoiceDetailRepository.findById(idInvoiceDetail)
                 .orElseThrow(() -> new NullPointerException("InvoiceDetail not found"));
     }
+
+    public float calculateTotalAmount(InvoiceDetail invoiceDetail) {
+        return invoiceDetail.getQuantity() * invoiceDetail.getPrice();
+    }
+
+
 }
